@@ -1,4 +1,4 @@
-# Soma Scholarship Matching
+# Soma Scholarship Matching AI Model
 
 This project implements an AI-driven matching algorithm to connect users with scholarships based on their profiles.
 
