@@ -1,30 +1,28 @@
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 
 def preprocess_data(scholarships, user_profile):
     """
     Preprocess scholarships and user profile data.
     """
-    # Align the user profile fields with the scholarship data fields
-    user_profile_aligned = {
-        'eligibility_criteria': user_profile['academic_background'],
-        'country': user_profile['country'],
-        'field_of_study': user_profile['field_of_study'],
-        'financial_needs': user_profile['financial_needs'],
-        'extracurricular_activities': ', '.join(user_profile['extracurricular_activities'])
-    }
+    # Combine relevant fields into a single text field for scholarships
+    scholarships['combined'] = scholarships['Title'] + ' ' + scholarships['About']
+    
+    # Create a text field for user profile
+    user_profile_text = f"{user_profile['academic_background']} {user_profile['field_of_study']} {' '.join(user_profile['extracurricular_activities'])} {user_profile['financial_needs']} {user_profile['country']}"
+    
+    # Vectorize the text fields using TF-IDF
+    vectorizer = TfidfVectorizer(stop_words='english')
+    X = vectorizer.fit_transform(scholarships['combined'])
+    user_vector = vectorizer.transform([user_profile_text])
+    
+    # Create a target column (this should be derived from your actual data, here we assume all are a match for simplicity)
+    scholarships['match'] = 1  # In a real scenario, you need a column indicating if a scholarship is a match or not
+    
+    y = scholarships['match']  # Replace with actual target column if available
+    
+    return train_test_split(X, y, test_size=0.2, random_state=42), user_vector
 
-    scholarships['financial_needs'] = scholarships['eligibility_criteria'].apply(lambda x: 'High' if 'STEM' in x else 'Low')
-    scholarships['field_of_study'] = scholarships['eligibility_criteria']
-    scholarships['extracurricular_activities'] = scholarships['eligibility_criteria']
-
-    # Create a 'match' column for testing purposes if it doesn't exist
-    if 'match' not in scholarships.columns:
-        scholarships['match'] = 0  # Default to 0 for all
-
-    encoder = OneHotEncoder(handle_unknown='ignore')
-    X = encoder.fit_transform(scholarships[['eligibility_criteria', 'country', 'field_of_study', 'financial_needs', 'extracurricular_activities']])
-    y = scholarships['match']
-
-    return train_test_split(X, y, test_size=0.2, random_state=42)
+# Example usage:
+# scholarships, user_profile = preprocess_data(scholarships, user_profile)
