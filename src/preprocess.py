@@ -1,28 +1,20 @@
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split
 
-def preprocess_data(scholarships, user_profile):
-    """
-    Preprocess scholarships and user profile data.
-    """
-    # Combine relevant fields into a single text field for scholarships
-    scholarships['combined'] = scholarships['Title'] + ' ' + scholarships['About']
+def preprocess_data(scholarships_df, user_profile):
+    # Ensure consistent column names
+    scholarships_df.columns = ['Unnamed: 0', 'title', 'degrees', 'funds', 'date', 'location', 'scholarship_id']
     
-    # Create a text field for user profile
-    user_profile_text = f"{user_profile['academic_background']} {user_profile['field_of_study']} {' '.join(user_profile['extracurricular_activities'])} {user_profile['financial_needs']} {user_profile['country']}"
+    # Drop the 'Unnamed: 0' column as it is not needed
+    scholarships_df = scholarships_df.drop(columns=['Unnamed: 0'])
     
-    # Vectorize the text fields using TF-IDF
-    vectorizer = TfidfVectorizer(stop_words='english')
-    X = vectorizer.fit_transform(scholarships['combined'])
-    user_vector = vectorizer.transform([user_profile_text])
+    # Encode categorical features
+    features = pd.get_dummies(scholarships_df[['title', 'degrees', 'funds', 'date', 'location']])
+    target = scholarships_df['scholarship_id']  # Target can be adjusted as necessary
     
-    # Create a target column (this should be derived from your actual data, here we assume all are a match for simplicity)
-    scholarships['match'] = 1  # In a real scenario, you need a column indicating if a scholarship is a match or not
+    # Process user profile into a DataFrame (make sure these keys exist in user_profile)
+    user_profile_df = pd.DataFrame([user_profile])
     
-    y = scholarships['match']  # Replace with actual target column if available
+    # Encode user profile
+    user_profile_vector = pd.get_dummies(user_profile_df).reindex(columns=features.columns, fill_value=0)
     
-    return train_test_split(X, y, test_size=0.2, random_state=42), user_vector
-
-# Example usage:
-# scholarships, user_profile = preprocess_data(scholarships, user_profile)
+    return features, target, user_profile_vector
