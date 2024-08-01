@@ -1,51 +1,40 @@
-from load_data import load_scholarships
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
 from preprocess import preprocess_data
 from matching_algorithm import calculate_similarity, get_top_matches
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score
-import pandas as pd
-from scrape import scrape_scholarships  # Import the new scraping function
+from scrape import scrape_scholarships
 
 def main():
-    # Define user profile
     user_profile = {
-        'title': 'Scholarship',
-        'degrees': 'Master',
-        'funds': '$1000',
-        'date': '2024-07-30',
-        'location': 'united-states'
+        'academic_background': 'Computer Science',
+        'field_of_study': 'Software Engineering',
+        'extracurricular_activities': 'AI research',
+        'financial_needs': 'High',
+        'country': 'Kenya'
     }
-    
-    # Scrape scholarships data
-    print("Scraping scholarships data...")
-    scraped_scholarships = scrape_scholarships(user_profile)
-    
-    # If scraping fails, fallback to loading local data
-    if scraped_scholarships.empty:
+
+    try:
+        print("Scraping scholarships data...")
+        scholarships_df = scrape_scholarships(user_profile)
+        if scholarships_df.empty:
+            raise ValueError("No data scraped, falling back to local data...")
+    except Exception as e:
+        print(e)
         print("Falling back to local data...")
-        scholarships = load_scholarships('data/processed_scholarships.csv')
-    else:
-        scholarships = scraped_scholarships
-    
-    # Preprocess data
-    features, target, user_profile_vector = preprocess_data(scholarships, user_profile)
-    
-    # Train the model
-    model = DecisionTreeClassifier(random_state=42)
+        scholarships_df = pd.read_csv('data/processed_scholarships.csv')
+
+    features, target, user_profile_vector = preprocess_data(scholarships_df, user_profile)
+
+    # Define and fit the model
+    model = RandomForestClassifier()
     model.fit(features, target)
-    
-    # Make predictions
-    y_pred = model.predict(features)
-    accuracy = accuracy_score(target, y_pred)
-    print(f'Accuracy: {accuracy * 100:.2f}%')
-    
-    # Get top matches for the user
+    accuracy = model.score(features, target)
+    print(f"Model Accuracy: {accuracy * 100:.2f}%")
+
     similarities = calculate_similarity(model, features, user_profile_vector)
-    top_matches = get_top_matches(scholarships, similarities)
-    
-    # Display top matches
+    top_matches = get_top_matches(scholarships_df, similarities)
     print("Top Scholarship Matches:")
     print(top_matches[['title', 'funds', 'location']])
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
