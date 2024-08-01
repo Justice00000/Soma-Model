@@ -1,10 +1,43 @@
-from load_data import load_scholarships
-from preprocess import preprocess_data
-from matching_algorithm import calculate_similarity, get_top_matches
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score
+import requests
+from bs4 import BeautifulSoup
 import pandas as pd
-from scrape import scrape_scholarships  # Import the new scraping function
+
+def scrape_scholarships(user_profile):
+    base_url = "https://chatgpt.com/scholarships"
+    query = {
+        'title': user_profile['title'],
+        'degrees': user_profile['degrees'],
+        'funds': user_profile['funds'],
+        'date': user_profile['date'],
+        'location': user_profile['location']
+    }
+    response = requests.get(base_url, params=query)
+    
+    if response.status_code != 200:
+        print("Failed to retrieve data")
+        return pd.DataFrame()  # Return an empty DataFrame on failure
+    
+    soup = BeautifulSoup(response.content, 'html.parser')
+    
+    scholarships = []
+    for item in soup.select('.scholarship-item'):
+        title = item.select_one('.title').text.strip()
+        degrees = item.select_one('.degrees').text.strip()
+        funds = item.select_one('.funds').text.strip()
+        date = item.select_one('.date').text.strip()
+        location = item.select_one('.location').text.strip()
+        
+        scholarships.append({
+            'title': title,
+            'degrees': degrees,
+            'funds': funds,
+            'date': date,
+            'location': location
+        })
+    
+    return pd.DataFrame(scholarships)
+
+# Note: Replace the selectors ('.scholarship-item', '.title', etc.) with actual selectors from the target website.
 
 def main():
     # Define user profile
