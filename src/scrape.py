@@ -1,67 +1,76 @@
 import requests
 from bs4 import BeautifulSoup
-import pandas as pd
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+import csv
+from urllib.parse import urljoin
+import time
 
-def scrape_scholarships(user_profile):
-    base_urls = [
-        "https://www.scholarshipregion.com/category/scholarships/",
-        "https://bigfuture.collegeboard.org/scholarship-search"
-    ]
-    
-    scholarships = []
+# Function to save scholarship data to CSV
+def save_to_csv(data):
+    with open('scholarships.csv', 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Title', 'Link', 'Degree', 'Location', 'Funds Needed'])  # Adjust columns as needed
+        for row in data:
+            writer.writerow(row)
 
-    session = requests.Session()
-    retries = Retry(total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
-    session.mount('http://', HTTPAdapter(max_retries=retries))
-    session.mount('https://', HTTPAdapter(max_retries=retries))
+def get_scholarship_details(url):
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed for {url}: {e}")
+        return None
+
+    soup = BeautifulSoup(response.content, 'lxml')
+    
+    # Placeholder for scraping details - adjust selectors as needed
+    degree = soup.find('div', class_='degree').text.strip() if soup.find('div', class_='degree') else 'N/A'
+    location = soup.find('div', class_='location').text.strip() if soup.find('div', class_='location') else 'N/A'
+    funds = soup.find('div', class_='funds').text.strip() if soup.find('div', class_='funds') else 'N/A'
+
+    return degree, location, funds
+
+def scrape_scholarships(urls):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
 
-    for base_url in base_urls:
+    all_scholarship_data = []
+
+    for url in urls:
         try:
-            response = session.get(base_url, headers=headers, timeout=10)
-            response.raise_for_status()  # Raise an HTTPError for bad responses
-            soup = BeautifulSoup(response.content, 'html.parser')
-
-            # Adjust the scraping logic based on each website's HTML structure
-            if 'scholarshipregion' in base_url:
-                for scholarship in soup.find_all('div', class_='example-class-region'):
-                    title = scholarship.find('h3', class_='example-title').text.strip()
-                    degrees = scholarship.find('p', class_='example-degrees').text.strip()
-                    funds = scholarship.find('span', class_='example-funds').text.strip()
-                    date = scholarship.find('span', class_='example-date').text.strip()
-                    location = scholarship.find('span', class_='example-location').text.strip()
-                    
-                    scholarships.append({
-                        'title': title,
-                        'degrees': degrees,
-                        'funds': funds,
-                        'date': date,
-                        'location': location,
-                        'scholarship_id': len(scholarships) + 1
-                    })
-            elif 'daad' in base_url:
-                # Adjust the scraping logic for DAAD website
-                pass
-            elif 'collegeboard' in base_url:
-                # Adjust the scraping logic for College Board website
-                pass
-            elif 'chegg' in base_url:
-                # Adjust the scraping logic for Chegg website
-                pass
-            elif 'internationalscholarships' in base_url:
-                # Adjust the scraping logic for International Scholarships website
-                pass
-
+            result = requests.get(url, headers=headers)
+            result.raise_for_status()  # Raises HTTPError for bad responses
         except requests.exceptions.RequestException as e:
-            print(f"Failed to retrieve data from {base_url}: {e}")
+            print(f"Request failed for {url}: {e}")
+            continue
 
-    return pd.DataFrame(scholarships)
+        print(f"Status Code: {result.status_code}")
 
+        if result.status_code == 200:
+            soup = BeautifulSoup(result.content, 'lxml')
+            links = soup.find_all("a")
+
+            for link in links:
+                href = link.attrs.get('href', '')
+                full_url = urljoin(url, href)
+                if "Scholarship" in link.text:  # Adjust criteria based on actual content
+                    print(f"Title: {link.text}, URL: {full_url}")
+                    details = get_scholarship_details(full_url)
+                    if details:
+                        degree, location, funds = details
+                        all_scholarship_data.append([link.text.strip(), full_url, degree, location, funds])
+        
+        time.sleep(2)  # Delay to avoid being blocked
+
+    save_to_csv(all_scholarship_data)
+
+# Ensure this script can be run independently
 if __name__ == "__main__":
-    user_profile = {}  # Define user profile as needed
-    df = scrape_scholarships(user_profile)
-    print(df)
+    urls = [
+        "https://www.scholarshipregion.com/category/scholarships/",
+        "https://www.fastweb.com/"
+    ]
+    scrape_scholarships(urls)
