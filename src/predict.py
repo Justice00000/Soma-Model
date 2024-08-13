@@ -2,11 +2,11 @@ import joblib
 import pandas as pd
 
 # Load the model and encoder
-model = joblib.load('../models/scholarship_match.pkl')
-encoder = joblib.load('../models/encoder.pkl')
+model = joblib.load('models\scholarship_match.pkl')
+encoder = joblib.load('models\encorder.pkl')
 
 # Load scholarships data
-scholarships = pd.read_csv('../data/new_scholarships.csv')
+scholarships = pd.read_csv('scholarships.csv')
 
 # Define a new user profile
 new_user_profile = {
