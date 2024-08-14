@@ -2,7 +2,7 @@ import pandas as pd
 
 # Load the datasets
 user_profiles = pd.read_csv('data/user_profiles.csv')
-scholarships = pd.read_csv('data/new_scholarships.csv')
+scholarships = pd.read_csv('scholarships.csv')
 labels = pd.read_csv('data/labels.csv')
 
 # Convert columns to the same type (string)
