@@ -82,7 +82,7 @@ def scrape_scholarships(urls):
 # Ensure this script can be run independently
 if __name__ == "__main__":
     urls = [
-        "https://www2.daad.de/ausland/studieren/stipendium/de/70-stipendien-finden-und-bewerben/",
+        "https://www.scholars4dev.com/8319/fully-funded-scholarships-international-students/",
         "https://www.scholarshipregion.com/category/scholarships/scholarships-in-asia/",
         "https://www.scholarshipregion.com/category/scholarships/scholarships-in-europe/",
         "https://www.scholarshipregion.com/category/scholarships/scholarships-in-africa/",
