@@ -1,0 +1,11 @@
+requests
+beautifulsoup4
+pandas
+openai
+scikit-learn
+flask
+langchain
+rug
+react
+axios
+python-dotenv
