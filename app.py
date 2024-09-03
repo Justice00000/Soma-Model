@@ -1,11 +1,15 @@
 from flask import Flask, request, jsonify, Response
 import pandas as pd
 import json
+import os
 
 app = Flask(__name__)
 
 # Function to load scholarships from CSV
 def load_scholarships_from_csv(file_path):
+    if not os.path.exists(file_path):
+        print(f"CSV file not found: {file_path}")
+        return pd.DataFrame()
     try:
         return pd.read_csv(file_path, on_bad_lines='warn')
     except pd.errors.ParserError as e:
@@ -14,7 +18,7 @@ def load_scholarships_from_csv(file_path):
 
 # Matching function
 def match_scholarships(user_profile, scholarships):
-    scholarships['match_score'] = scholarships['Title'].apply(lambda x: score_title(x, user_profile['degree']))
+    scholarships['match_score'] = scholarships['Title'].apply(lambda x: score_title(x, user_profile.get('degree', '')))
     matched_scholarships = scholarships.sort_values(by='match_score', ascending=False)
     return matched_scholarships
 
@@ -34,11 +38,18 @@ scholarships = load_scholarships_from_csv(csv_file_path)
 
 @app.route('/match-scholarships', methods=['POST'])
 def get_matched_scholarships():
+    if not request.json:
+        return Response("Invalid input", status=400, mimetype='text/plain')
+    
     user_profile = request.json
+    degree = user_profile.get('degree', '')
+    
+    if not degree:
+        return Response("Degree field is required", status=400, mimetype='text/plain')
+    
     matched_scholarships = match_scholarships(user_profile, scholarships)
     top_matches = matched_scholarships.head(5).to_dict(orient='records')
 
-    # Ensure the response is treated as JSON
     response_json = json.dumps(top_matches)
     
     return Response(response=response_json, status=200, mimetype='application/json')
