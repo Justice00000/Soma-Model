@@ -11,7 +11,10 @@ def load_scholarships_from_csv(file_path):
         print(f"CSV file not found: {file_path}")
         return pd.DataFrame()
     try:
-        return pd.read_csv(file_path, on_bad_lines='warn')
+        df = pd.read_csv(file_path, on_bad_lines='warn')
+        # Replace NaN values with None (which translates to null in JSON)
+        df = df.where(pd.notnull(df), None)
+        return df
     except pd.errors.ParserError as e:
         print(f"Error reading CSV file: {e}")
         return pd.DataFrame()
