@@ -4,6 +4,7 @@ import json
 
 app = Flask(__name__)
 
+# Function to load scholarships from CSV
 def load_scholarships_from_csv(file_path):
     try:
         return pd.read_csv(file_path, on_bad_lines='warn')
@@ -11,11 +12,13 @@ def load_scholarships_from_csv(file_path):
         print(f"Error reading CSV file: {e}")
         return pd.DataFrame()
 
+# Matching function
 def match_scholarships(user_profile, scholarships):
     scholarships['match_score'] = scholarships['Title'].apply(lambda x: score_title(x, user_profile['degree']))
     matched_scholarships = scholarships.sort_values(by='match_score', ascending=False)
     return matched_scholarships
 
+# Scoring function
 def score_title(title, degree):
     title = title.lower()
     degree = degree.lower()
@@ -25,6 +28,7 @@ def score_title(title, degree):
         return 5
     return 0
 
+# Load scholarships data
 csv_file_path = 'scholarships.csv'
 scholarships = load_scholarships_from_csv(csv_file_path)
 
@@ -34,9 +38,9 @@ def get_matched_scholarships():
     matched_scholarships = match_scholarships(user_profile, scholarships)
     top_matches = matched_scholarships.head(5).to_dict(orient='records')
 
-    # Manually serialize to JSON if needed
+    # Ensure the response is treated as JSON
     response_json = json.dumps(top_matches)
-
+    
     return Response(response=response_json, status=200, mimetype='application/json')
 
 if __name__ == '__main__':
