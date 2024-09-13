@@ -9,7 +9,7 @@ def load_scholarships_from_csv(file_path):
         # Load the CSV, skipping lines with incorrect field numbers
         scholarships = pd.read_csv(file_path, on_bad_lines='warn')
         # Replace NaN values with an empty string or None
-        scholarships = scholarships.fillna()  # Replacing NaN with an empty string for JSON compatibility
+        scholarships = scholarships.fillna("")  # Replacing NaN with an empty string for JSON compatibility
         return scholarships
     except pd.errors.ParserError as e:
         print(f"Error reading CSV file: {e}")
