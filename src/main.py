@@ -19,7 +19,7 @@ def load_scholarships_from_csv(file_path):
 def match_scholarships(user_profile, scholarships):
     # Example matching logic based on title
     # Updated scoring function for better matching
-    scholarships['match_score'] = scholarships['Title'].apply(lambda x: score_title(x, user_profile['degree']))
+    scholarships['match_score'] = scholarships['description'].apply(lambda x: score_title(x, user_profile['degree']))
     
     # Sort by match score in descending order
     matched_scholarships = scholarships.sort_values(by='match_score', ascending=False)
@@ -39,7 +39,7 @@ def score_title(title, degree):
     return 0  # No match
 
 # File path to the CSV containing scraped scholarships
-csv_file_path = 'scholarships.csv'
+csv_file_path = 'scholaships.csv'
 
 # Load the scholarships data
 scholarships = load_scholarships_from_csv(csv_file_path)

@@ -6,7 +6,7 @@ from workflow.workflow import run_workflow
 app = Flask(__name__)
 
 # Determine the correct path to the CSV file
-csv_file_path = os.path.join(os.path.dirname(__file__), '../data_collection/scholarships.csv')
+csv_file_path = os.path.join(os.path.dirname(__file__), 'scholaships.csv')
 
 @app.route('/match', methods=['POST'])
 def match_scholarships():
