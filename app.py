@@ -84,6 +84,6 @@ def match_scholarships_endpoint():
 # Main entry point
 if __name__ == '__main__':
     # Get the PORT from environment variables (for deployment on platforms like Render)
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 10000))
     # Bind to 0.0.0.0 to make the app publicly accessible
     app.run(host='0.0.0.0', port=port, debug=True)
