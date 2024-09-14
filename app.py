@@ -82,7 +82,7 @@ def match_scholarships_endpoint():
         return jsonify({'error': str(e)}), 500
 
 # Main entry point
-
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    import os
+    port = int(os.environ.get('PORT', 5000))  # Ensure this matches your Render configuration
     app.run(host='0.0.0.0', port=port, debug=True)
