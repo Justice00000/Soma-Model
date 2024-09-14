@@ -27,7 +27,7 @@ def calculate_match_score(scholarship, user_profile):
     score = 0
     degree = user_profile['degree'].lower()
     location = user_profile['location'].lower()
-    funds_needed = user_profile['funds_needed']
+    funds_needed = float(user_profile['funds_needed'])  # Convert to float for comparison
     
     # Scoring based on description
     if degree in scholarship['description'].lower():
@@ -38,8 +38,13 @@ def calculate_match_score(scholarship, user_profile):
         score += 10
     
     # Scoring based on funds needed vs scholarship grant
-    if pd.notna(scholarship['Grant']) and funds_needed <= scholarship['Grant']:
-        score += 5
+    if pd.notna(scholarship['Grant']):
+        try:
+            grant = float(scholarship['Grant'])  # Convert to float for comparison
+            if funds_needed <= grant:
+                score += 5
+        except ValueError:
+            pass  # Handle the case where 'Grant' cannot be converted to float
 
     # Scoring based on scholarship type and eligibility
     if 'scholaship_type' in scholarship and scholarship['scholaship_type'].lower() in user_profile.get('applicable_programmes', '').lower():
@@ -50,8 +55,14 @@ def calculate_match_score(scholarship, user_profile):
         score += 7
     
     # Additional matching for benefits, age, and experience if available
-    if pd.notna(scholarship.get('age')) and 'age' in user_profile and int(user_profile['age']) <= int(scholarship['age']):
-        score += 3
+    if pd.notna(scholarship.get('age')) and 'age' in user_profile:
+        try:
+            age = int(user_profile['age'])
+            scholarship_age = int(scholarship['age'])
+            if age <= scholarship_age:
+                score += 3
+        except ValueError:
+            pass  # Handle the case where 'age' cannot be converted to int
 
     if pd.notna(scholarship.get('study_experience_required')) and user_profile.get('study_experience', '').lower() in scholarship['study_experience_required'].lower():
         score += 5
@@ -83,6 +94,5 @@ def match_scholarships_endpoint():
 
 # Main entry point
 if __name__ == '__main__':
-    import os
     port = int(os.environ.get('PORT', 5000))  # Ensure this matches your Render configuration
     app.run(host='0.0.0.0', port=port, debug=True)
