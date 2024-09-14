@@ -7,8 +7,11 @@ app = Flask(__name__)
 # Load the scraped scholarship data from a CSV file
 def load_scholarships_from_csv(file_path):
     try:
-        # Skip lines with too many fields and print a warning for each
-        return pd.read_csv(file_path, on_bad_lines='warn')
+        # Load the CSV file, skipping lines with too many fields and print a warning for each
+        df = pd.read_csv(file_path, on_bad_lines='warn')
+        # Replace NaN values with empty strings
+        df = df.fillna('')
+        return df
     except pd.errors.ParserError as e:
         print(f"Error reading CSV file: {e}")
         return pd.DataFrame()
@@ -38,7 +41,7 @@ def calculate_match_score(scholarship, user_profile):
         score += 10
     
     # Scoring based on funds needed vs scholarship grant
-    if pd.notna(scholarship['Grant']):
+    if scholarship['Grant']:
         try:
             grant = float(scholarship['Grant'])  # Convert to float for comparison
             if funds_needed <= grant:
@@ -55,16 +58,16 @@ def calculate_match_score(scholarship, user_profile):
         score += 7
     
     # Additional matching for benefits, age, and experience if available
-    if pd.notna(scholarship.get('age')) and 'age' in user_profile:
+    if scholarship.get('age'):
         try:
-            age = int(user_profile['age'])
+            age = int(user_profile.get('age', 0))
             scholarship_age = int(scholarship['age'])
             if age <= scholarship_age:
                 score += 3
         except ValueError:
             pass  # Handle the case where 'age' cannot be converted to int
 
-    if pd.notna(scholarship.get('study_experience_required')) and user_profile.get('study_experience', '').lower() in scholarship['study_experience_required'].lower():
+    if scholarship.get('study_experience_required') and user_profile.get('study_experience', '').lower() in scholarship['study_experience_required'].lower():
         score += 5
     
     return score
